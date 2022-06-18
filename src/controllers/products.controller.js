@@ -23,7 +23,7 @@ const getProducts = async (request, response) => {
                 };
                 response.status(400).send(respuesta);
             } else {
-                console.log(resultado);
+                console.log(resultado.length, "productos encontrados");
                 respuesta = {
                     error: false,
                     codigo: 200,
@@ -52,13 +52,20 @@ const putProduct = async (request, response) => {
         request.body.url,
         request.body.category,
         request.body.subcategory,
-        request.body.type
+        request.body.type,
+        request.body.outOfStock ? 1 : 0
     );
+    console.log(producto);
     let respuesta = null;
-    console.log("Producto modificado", producto);
+    console.log("Producto modificado por el usuario", producto);
 
-    let sql = `UPDATE products SET description= ?, image = ? WHERE idproduct=?;`;
-    let params = [...producto];
+    let sql = `UPDATE products SET description= ?, image = ?, outOfStock = ? WHERE idproduct=?;`;
+    let params = [
+        producto.description,
+        producto.image,
+        producto.outOfStock,
+        producto.id,
+    ];
     try {
         conexion.query(sql, params, function (error, resultado) {
             if (error) {
@@ -72,17 +79,28 @@ const putProduct = async (request, response) => {
                 };
                 response.status(400).send(respuesta);
             } else {
-                console.log(
-                    "Producto actualizado en la base de datos",
-                    producto.id
-                );
-                respuesta = {
-                    error: false,
-                    codigo: 200,
-                    mensaje: `Producto con id ${producto.id} actualizado`,
-                    datos: { id: id },
-                };
-                response.status(200).send(respuesta);
+                console.log(resultado);
+                if (resultado.affectedRows === 0) {
+                    respuesta = {
+                        error: true,
+                        codigo: 404,
+                        mensaje: `No se ha hallado ningún producto con id ${id}`,
+                        datos: { producto: producto },
+                    };
+                    response.status(200).send(respuesta);
+                } else {
+                    console.log(
+                        "Producto actualizado en la base de datos",
+                        producto.id
+                    );
+                    respuesta = {
+                        error: false,
+                        codigo: 200,
+                        mensaje: `Producto con id ${producto.id} actualizado`,
+                        datos: { producto: producto },
+                    };
+                    response.status(200).send(respuesta);
+                }
             }
         });
     } catch (error) {
@@ -96,7 +114,7 @@ const deleteProduct = async (request, response) => {
     console.log("METODO: ", request.method);
     console.log("USER AGENT: ", request.headers["user-agent"]);
 
-    let id = request.body.id;
+    let id = request.query.id;
     let respuesta = null;
     console.log("Solicitud de borrado de producto", id);
 
@@ -116,13 +134,23 @@ const deleteProduct = async (request, response) => {
                 response.status(400).send(respuesta);
             } else {
                 console.log(resultado);
-                respuesta = {
-                    error: false,
-                    codigo: 200,
-                    mensaje: `Producto con id ${id} eliminado`,
-                    datos: { id: id },
-                };
-                response.status(200).send(respuesta);
+                if (resultado.affectedRows === 0) {
+                    respuesta = {
+                        error: true,
+                        codigo: 404,
+                        mensaje: `No se ha hallado ningún producto con id ${id}`,
+                        datos: { id: id },
+                    };
+                    response.status(200).send(respuesta);
+                } else {
+                    respuesta = {
+                        error: false,
+                        codigo: 200,
+                        mensaje: `Producto con id ${id} eliminado`,
+                        datos: { id: id },
+                    };
+                    response.status(200).send(respuesta);
+                }
             }
         });
     } catch (error) {

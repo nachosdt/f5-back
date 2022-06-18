@@ -7,7 +7,8 @@ class Product {
         url,
         category,
         subcategory,
-        type
+        type,
+        outOfStock
     ) {
         this.id = id;
         this.description = description;
@@ -17,6 +18,7 @@ class Product {
         this.category = category;
         this.subcategory = subcategory;
         this.type = type;
+        this.outOfStock = outOfStock;
     }
 }
 
